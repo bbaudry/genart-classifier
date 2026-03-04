@@ -1,0 +1,123 @@
+Node {
+  type: 'Program',
+  start: 0,
+  end: 1811,
+  body: [
+    Node {
+      type: 'VariableDeclaration',
+      start: 1,
+      end: 9,
+      declarations: [Array],
+      kind: 'var'
+    },
+    Node {
+      type: 'VariableDeclaration',
+      start: 10,
+      end: 17,
+      declarations: [Array],
+      kind: 'var'
+    },
+    Node {
+      type: 'VariableDeclaration',
+      start: 18,
+      end: 107,
+      declarations: [Array],
+      kind: 'var'
+    },
+    Node {
+      type: 'VariableDeclaration',
+      start: 108,
+      end: 122,
+      declarations: [Array],
+      kind: 'var'
+    },
+    Node {
+      type: 'VariableDeclaration',
+      start: 123,
+      end: 131,
+      declarations: [Array],
+      kind: 'var'
+    },
+    Node {
+      type: 'VariableDeclaration',
+      start: 132,
+      end: 145,
+      declarations: [Array],
+      kind: 'var'
+    },
+    Node {
+      type: 'VariableDeclaration',
+      start: 146,
+      end: 170,
+      declarations: [Array],
+      kind: 'var'
+    },
+    Node {
+      type: 'FunctionDeclaration',
+      start: 172,
+      end: 300,
+      id: [Node],
+      expression: false,
+      generator: false,
+      async: false,
+      params: [],
+      body: [Node]
+    },
+    Node {
+      type: 'FunctionDeclaration',
+      start: 301,
+      end: 1129,
+      id: [Node],
+      expression: false,
+      generator: false,
+      async: false,
+      params: [],
+      body: [Node]
+    },
+    Node {
+      type: 'FunctionDeclaration',
+      start: 1131,
+      end: 1179,
+      id: [Node],
+      expression: false,
+      generator: false,
+      async: false,
+      params: [],
+      body: [Node]
+    },
+    Node {
+      type: 'FunctionDeclaration',
+      start: 1182,
+      end: 1230,
+      id: [Node],
+      expression: false,
+      generator: false,
+      async: false,
+      params: [],
+      body: [Node]
+    },
+    Node {
+      type: 'FunctionDeclaration',
+      start: 1233,
+      end: 1377,
+      id: [Node],
+      expression: false,
+      generator: false,
+      async: false,
+      params: [],
+      body: [Node]
+    },
+    Node {
+      type: 'FunctionDeclaration',
+      start: 1380,
+      end: 1811,
+      id: [Node],
+      expression: false,
+      generator: false,
+      async: false,
+      params: [],
+      body: [Node]
+    }
+  ],
+  sourceType: 'script'
+}
