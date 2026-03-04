@@ -1,0 +1,1 @@
+Analyze p5 sketches to determine which parts of the p5 API they use as indicators of the generative artwork's intention 
