@@ -13,6 +13,7 @@
   "author": "benoit baudry",
   "license": "MIT",
   "dependencies": {
-    "mocha": "^11.7.5"
+    "mocha": "^11.7.5",
+    "recast": "^0.23.11"
   }
 }
