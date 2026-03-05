@@ -13,9 +13,6 @@ let acornconfig = {
     allowReturnOutsideFunction: true
 }
 
-const code = fs.readFileSync('./plein019.js').toString();
-const ast = acorn.parse(code, acornconfig).body;
-let functionNames = [];
 let p5functions = []
 if (require.main === module) {
     main();
@@ -28,24 +25,27 @@ async function main() {
     for(i in p5api.classitems){
         p5functions.push(p5api.classitems[i].name)
     }
-    getInvokedFunctions()
+    let functionsInvokedInSketch=getInvokedFunctions('./plein019.js')
     let invokedp5functions = p5functions.filter(
-    (element) => functionNames.includes(element));    
+    (element) => functionsInvokedInSketch.includes(element));    
     console.log(invokedp5functions)
 }
 
 
-function getInvokedFunctions() {
+function getInvokedFunctions(filename) {
+    const code = fs.readFileSync(filename).toString();
+    const ast = acorn.parse(code, acornconfig).body;
+    let functionNames = [];
     recast.visit(
         ast,
         {
             visitCallExpression: (path) => {
-                
                 if(path.node.callee.name){functionNames.push(path.node.callee.name)}
                 return false;
             }
         }
     )
+    return functionNames
 }
 
 
