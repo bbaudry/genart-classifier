@@ -21,6 +21,7 @@ if (require.main === module) {
 let p5functions = new Map()
 async function main() {
     // all p5 elements are documented in a single json object, here: https://p5js.org/reference/data.json
+    // classitems lists all the methods
     const response = await fetch('https://p5js.org/reference/data.json');
     const p5api = await response.json();
     for (i in p5api.classitems) {
@@ -28,12 +29,11 @@ async function main() {
             p5functions.set(p5api.classitems[i].name, i)
         }
     }
-    let p5InAllartworks = []
+    let p5InAllartworks = [] // will contain one json object per artwork
     fs.readdir(artfolder, (err, files) => {
         files.forEach(file => {
             let p5FunctionsInvokedInArtwork = getInvokedP5Functions(file)
             p5InAllartworks.push(p5FunctionsInvokedInArtwork)
-            console.log(JSON.stringify(p5InAllartworks))
         });
         fs.writeFileSync("p5InArtworks.json", JSON.stringify(p5InAllartworks), function (err) {
             if (err) throw err;
@@ -42,6 +42,18 @@ async function main() {
         );
     });
 
+    let p5VectorsForAllArtworks = [] // will contain one json object per artwork
+    fs.readdir(artfolder, (err, files) => {
+        files.forEach(file => {
+            let p5VectorArtwork = getP5FunctionsVector(file)
+            p5VectorsForAllArtworks.push(p5VectorArtwork)
+        });
+        fs.writeFileSync("p5VectorsArtworks.json", JSON.stringify(p5VectorsForAllArtworks), function (err) {
+            if (err) throw err;
+            console.log('complete');
+        }
+        );
+    });
 }
 
 // returns the names of the p5 functions invoked in filename
@@ -58,9 +70,10 @@ function getInvokedP5Functions(filename) {
                 functionname = path.node.callee.name
                 p5function = p5functions.has(functionname)
                 if (functionname && p5function) {
+                    let index=p5functions.get(functionname)
                     p5FunctionsInFile.push({
-                        name: path.node.callee.name,
-                        id: p5functions.get(functionname)
+                        name: functionname,
+                        id: index
                     }
                     )
                 }
@@ -69,4 +82,36 @@ function getInvokedP5Functions(filename) {
         }
     )
     return { artwork: filename, p5functions: p5FunctionsInFile }
+}
+
+
+
+// returns the list of p5 methods. If the method is invoked, the values is the number of invocations
+// filename must be the name of one javascript file (a script)
+function getP5FunctionsVector(filename) {
+    const code = fs.readFileSync(artfolder + filename).toString();
+    const ast = acorn.parse(code, acornconfig).body;
+    let p5FunctionsInFile = [];
+    let functionname, p5function, p5vector
+    // initialize a map with all p5 methods as keys, and 0 as value
+    p5vector = p5functions
+    for (let v of p5vector.entries()) {
+        p5vector.set(v[0],0);
+    }
+    recast.visit(
+        ast,
+        {
+            visitCallExpression: (path) => {
+                functionname = path.node.callee.name
+                p5function = p5vector.has(functionname)
+                // if a p5 method is found in the sketch, we increment its corresponding value in p5vector
+                if (functionname && p5function) {
+                    val = p5vector.get(functionname)
+                    p5vector.set(functionname,val+1)
+                }
+                return false;
+            }
+        }
+    )
+    return { artwork: filename, p5functions: Object.fromEntries(p5vector) }
 }
