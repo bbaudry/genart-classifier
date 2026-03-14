@@ -2,6 +2,7 @@
 - https://github.com/acornjs/acorn
 - https://github.com/benjamn/recast
 - https://astexplorer.net/
+- https://saehm.github.io/DruidJS/api/classes/TSNE.html
 */
 const acorn = require("acorn")
 const recast = require('recast');
@@ -53,6 +54,16 @@ async function main() {
             console.log('complete');
         }
         );
+        let vectorsOfP5=[]
+        for(art in p5VectorsForAllArtworks){
+            let onevector=[]
+            let artwork=p5VectorsForAllArtworks[art]
+            for (f in artwork.p5functions){
+                onevector.push(artwork.p5functions[f])
+            }
+            vectorsOfP5.push(onevector)
+        }
+        console.log(vectorsOfP5)
     });
 }
 
