@@ -4,20 +4,31 @@
 - https://astexplorer.net/
 - https://saehm.github.io/DruidJS/api/classes/TSNE.html
 */
-const acorn = require("acorn")
-const recast = require('recast');
-const fs = require('node:fs');
+//const acorn = require("acorn")
+//const recast = require('recast');
+//const fs = require('node:fs');
 const artfolder = "./artworks/"
+import * as acorn from "acorn"
+import * as recast from "recast";
+import * as fs from 'node:fs';
+import * as druid from "@saehrimnir/druidjs";
+import { fileURLToPath } from 'url';
+import { realpathSync } from 'fs';
 
+const modulePath = fileURLToPath(import.meta.url);
+const mainPath = process.argv[1];
+
+if (realpathSync(modulePath) === realpathSync(mainPath)) {
+  console.log('This module is being run as the main script.');
+  // Run main functionality here
+  main();
+}   
 let acornconfig = {
     ecmaVersion: 9,
     sourceType: "script",
     allowReturnOutsideFunction: true
 }
 
-if (require.main === module) {
-    main();
-}
 
 let p5functions = new Map()
 async function main() {
@@ -25,7 +36,7 @@ async function main() {
     // classitems lists all the methods
     const response = await fetch('https://p5js.org/reference/data.json');
     const p5api = await response.json();
-    for (i in p5api.classitems) {
+    for (let i in p5api.classitems) {
         if (p5api.classitems[i].itemtype == "method") {
             p5functions.set(p5api.classitems[i].name, i)
         }
@@ -55,10 +66,10 @@ async function main() {
         }
         );
         let vectorsOfP5=[]
-        for(art in p5VectorsForAllArtworks){
+        for(let art in p5VectorsForAllArtworks){
             let onevector=[]
             let artwork=p5VectorsForAllArtworks[art]
-            for (f in artwork.p5functions){
+            for (let f in artwork.p5functions){
                 onevector.push(artwork.p5functions[f])
             }
             vectorsOfP5.push(onevector)
@@ -103,7 +114,7 @@ function getP5FunctionsVector(filename) {
     const code = fs.readFileSync(artfolder + filename).toString();
     const ast = acorn.parse(code, acornconfig).body;
     let p5FunctionsInFile = [];
-    let functionname, p5function, p5vector
+    let functionname, p5function, p5vector, val
     // initialize a map with all p5 methods as keys, and 0 as value
     p5vector = p5functions
     for (let v of p5vector.entries()) {
