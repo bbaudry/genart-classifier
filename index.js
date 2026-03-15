@@ -76,7 +76,7 @@ async function main() {
             vectorsOfP5.push(onevector)
             labels.push(artwork.artwork)
         }
-        vizembedding(vectorsOfP5, labels)
+        getembedding(vectorsOfP5, labels)
     });
 }
 
@@ -140,8 +140,7 @@ function getP5FunctionsVector(filename) {
     return { artwork: filename, p5functions: Object.fromEntries(p5vector) }
 }
 
-function vizembedding(data, labels) {
-    let matrix = druid.Matrix.from(data);
+function getembedding(data, labels) {
     const tsne = new druid.TSNE(data, {
         perplexity: 30,
         epsilon: 10,
@@ -149,7 +148,13 @@ function vizembedding(data, labels) {
         seed: 42
     });
 
-    const Y = tsne.transform(500); // 500 iterations
-    console.log(Y)
+    const embedding = tsne.transform(500); // 500 iterations
+    console.log(embedding)
     console.log(labels)
+    const JSONembed = { "embedding": embedding, "labels": labels }
+    fs.writeFileSync("artworksEmbedding.json", JSON.stringify(JSONembed), function (err) {
+        if (err) throw err;
+        console.log('complete');
+    })
+
 }

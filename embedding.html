@@ -20,21 +20,45 @@
     <div id="plot" style="width:900px;height:900px;"></div>
     <script>
         let plotdiv = document.getElementById('plot');
+        let embedx = []
+        let embedy = []
+        fetchJSONData()
 
-        var trace1 = {
-            x: [16.350320261533981, -6.141110422894272, -26.21322617332269, 27.066082708015536, -11.062066373332552],
-            y: [12.6927569947264, -25.49330839192297, 0.37355871973332505, -18.3473368590518, 30.774329536515044],
-            mode: 'markers',
-            type: 'scatter',
-            name: 'Art',
-            text: ['fortyfive.js',
-                'frenchco004.js',
-                'frenchcobezier002.js',
-                'ift62562026.js',
-                'plein019.js'],
-            marker: { size: 12 }
-        };
-        Plotly.newPlot(plotdiv, [trace1]);
+        function fetchJSONData() {
+            fetch('./artworksEmbedding.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data.embedding);
+                    plot(data)
+                })
+                .catch(error => console.error('Failed to fetch data:', error));
+        }
+
+        function plot(JSONembedding) {
+            let embedding = JSONembedding.embedding
+            for (i in embedding) {
+                console.log("x: " + embedding[i][0] + "; y: " + embedding[i][1])
+                embedx.push(embedding[i][0])
+                embedy.push(embedding[i][1])
+            }
+            let labels = JSONembedding.labels
+            var trace1 = {
+                x: embedx,
+                y: embedy,
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Art',
+                text: labels,
+                marker: { size: 12 }
+            };
+            Plotly.newPlot(plotdiv, [trace1]);
+        }
+
 
     </script>
 </body>
