@@ -19,10 +19,10 @@ const modulePath = fileURLToPath(import.meta.url);
 const mainPath = process.argv[1];
 
 if (realpathSync(modulePath) === realpathSync(mainPath)) {
-  console.log('This module is being run as the main script.');
-  // Run main functionality here
-  main();
-}   
+    console.log('This module is being run as the main script.');
+    // Run main functionality here
+    main();
+}
 let acornconfig = {
     ecmaVersion: 9,
     sourceType: "script",
@@ -65,16 +65,18 @@ async function main() {
             console.log('complete');
         }
         );
-        let vectorsOfP5=[]
-        for(let art in p5VectorsForAllArtworks){
-            let onevector=[]
-            let artwork=p5VectorsForAllArtworks[art]
-            for (let f in artwork.p5functions){
+        let vectorsOfP5 = []
+        let labels = []
+        for (let art in p5VectorsForAllArtworks) {
+            let onevector = []
+            let artwork = p5VectorsForAllArtworks[art]
+            for (let f in artwork.p5functions) {
                 onevector.push(artwork.p5functions[f])
             }
             vectorsOfP5.push(onevector)
+            labels.push(artwork.artwork)
         }
-        console.log(vectorsOfP5)
+        vizembedding(vectorsOfP5, labels)
     });
 }
 
@@ -92,7 +94,7 @@ function getInvokedP5Functions(filename) {
                 functionname = path.node.callee.name
                 p5function = p5functions.has(functionname)
                 if (functionname && p5function) {
-                    let index=p5functions.get(functionname)
+                    let index = p5functions.get(functionname)
                     p5FunctionsInFile.push({
                         name: functionname,
                         id: index
@@ -118,7 +120,7 @@ function getP5FunctionsVector(filename) {
     // initialize a map with all p5 methods as keys, and 0 as value
     p5vector = p5functions
     for (let v of p5vector.entries()) {
-        p5vector.set(v[0],0);
+        p5vector.set(v[0], 0);
     }
     recast.visit(
         ast,
@@ -129,11 +131,25 @@ function getP5FunctionsVector(filename) {
                 // if a p5 method is found in the sketch, we increment its corresponding value in p5vector
                 if (functionname && p5function) {
                     val = p5vector.get(functionname)
-                    p5vector.set(functionname,val+1)
+                    p5vector.set(functionname, val + 1)
                 }
                 return false;
             }
         }
     )
     return { artwork: filename, p5functions: Object.fromEntries(p5vector) }
+}
+
+function vizembedding(data, labels) {
+    let matrix = druid.Matrix.from(data);
+    const tsne = new druid.TSNE(data, {
+        perplexity: 30,
+        epsilon: 10,
+        d: 2,
+        seed: 42
+    });
+
+    const Y = tsne.transform(500); // 500 iterations
+    console.log(Y)
+    console.log(labels)
 }

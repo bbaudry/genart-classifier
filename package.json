@@ -16,8 +16,11 @@
   "dependencies": {
     "@saehrimnir/druidjs": "^0.8.0",
     "acorn": "^8.16.0",
+    "d3": "^7.9.0",
     "druidjs": "^0.2.0",
     "mocha": "^11.7.5",
+    "plotly.js": "^3.4.0",
+    "plotly.js-dist": "^3.4.0",
     "recast": "^0.23.11"
   }
 }
