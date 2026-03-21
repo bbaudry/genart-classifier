@@ -4,10 +4,6 @@
 - https://astexplorer.net/
 - https://saehm.github.io/DruidJS/api/classes/TSNE.html
 */
-//const acorn = require("acorn")
-//const recast = require('recast');
-//const fs = require('node:fs');
-const artfolder = "./artworks/"
 import * as acorn from "acorn"
 import * as recast from "recast";
 import * as fs from 'node:fs';
@@ -17,7 +13,8 @@ import { realpathSync } from 'fs';
 
 const modulePath = fileURLToPath(import.meta.url);
 const mainPath = process.argv[1];
-
+const artfolder = "./artworks/"
+const p5API = JSON.parse(fs.readFileSync('./p5API.json'));
 if (realpathSync(modulePath) === realpathSync(mainPath)) {
     console.log('This module is being run as the main script.');
     // Run main functionality here
@@ -30,21 +27,31 @@ let acornconfig = {
 }
 
 
-let p5functions = new Map()
+//const p5functions = new Map()
 async function main() {
     // all p5 elements are documented in a single json object, here: https://p5js.org/reference/data.json
     // classitems lists all the methods
-    const response = await fetch('https://p5js.org/reference/data.json');
-    const p5api = await response.json();
-    for (let i in p5api.classitems) {
-        if (p5api.classitems[i].itemtype == "method") {
-            p5functions.set(p5api.classitems[i].name, i)
-        }
+    // const response = await fetch('https://p5js.org/reference/data.json');
+    // const p5api = await response.json();
+    // for (let i in p5api.classitems) {
+    //     if (p5api.classitems[i].itemtype == "method") {
+    //         p5functions.set(p5api.classitems[i].name, i)
+    //         p5functionsnames.push(p5api.classitems[i].name)
+    //     }
+    // }
+    // fs.writeFileSync("p5API.json", JSON.stringify(Array.from(p5functions.entries())), function (err) {
+    //     if (err) throw err;
+    //     console.log('complete');
+    // });
+    let p5map=new Map()
+    for(let x in p5API){
+        p5map.set(p5API[x][0], p5API[x][1])
     }
+    console.log(p5map)
     let p5InAllartworks = [] // will contain one json object per artwork
     fs.readdir(artfolder, (err, files) => {
         files.forEach(file => {
-            let p5FunctionsInvokedInArtwork = getInvokedP5Functions(file)
+            let p5FunctionsInvokedInArtwork = getInvokedP5Functions(file,p5map)
             p5InAllartworks.push(p5FunctionsInvokedInArtwork)
         });
         fs.writeFileSync("p5InArtworks.json", JSON.stringify(p5InAllartworks), function (err) {
@@ -54,35 +61,35 @@ async function main() {
         );
     });
 
-    let p5VectorsForAllArtworks = [] // will contain one json object per artwork
-    fs.readdir(artfolder, (err, files) => {
-        files.forEach(file => {
-            let p5VectorArtwork = getP5FunctionsVector(file)
-            p5VectorsForAllArtworks.push(p5VectorArtwork)
-        });
-        fs.writeFileSync("p5VectorsArtworks.json", JSON.stringify(p5VectorsForAllArtworks), function (err) {
-            if (err) throw err;
-            console.log('complete');
-        }
-        );
-        let vectorsOfP5 = []
-        let labels = []
-        for (let art in p5VectorsForAllArtworks) {
-            let onevector = []
-            let artwork = p5VectorsForAllArtworks[art]
-            for (let f in artwork.p5functions) {
-                onevector.push(artwork.p5functions[f])
-            }
-            vectorsOfP5.push(onevector)
-            labels.push(artwork.artwork)
-        }
-        getembedding(vectorsOfP5, labels)
-    });
+    // let p5VectorsForAllArtworks = [] // will contain one json object per artwork
+    // fs.readdir(artfolder, (err, files) => {
+    //     files.forEach(file => {
+    //         let p5VectorArtwork = getP5FunctionsVector(file)
+    //         p5VectorsForAllArtworks.push(p5VectorArtwork)
+    //     });
+    //     fs.writeFileSync("p5VectorsArtworks.json", JSON.stringify(p5VectorsForAllArtworks), function (err) {
+    //         if (err) throw err;
+    //         console.log('complete');
+    //     }
+    //     );
+    //     let vectorsOfP5 = []
+    //     let labels = []
+    //     for (let art in p5VectorsForAllArtworks) {
+    //         let onevector = []
+    //         let artwork = p5VectorsForAllArtworks[art]
+    //         for (let f in artwork.p5functions) {
+    //             onevector.push(artwork.p5functions[f])
+    //         }
+    //         vectorsOfP5.push(onevector)
+    //         labels.push(artwork.artwork)
+    //     }
+    //     getembedding(vectorsOfP5, labels)
+    // });
 }
 
 // returns the names of the p5 functions invoked in filename
 // filename must be the name of one javascript file (a script)
-function getInvokedP5Functions(filename) {
+function getInvokedP5Functions(filename,p5functions) {
     const code = fs.readFileSync(artfolder + filename).toString();
     const ast = acorn.parse(code, acornconfig).body;
     let p5FunctionsInFile = [];
