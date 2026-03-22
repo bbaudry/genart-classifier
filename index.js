@@ -31,6 +31,7 @@ let acornconfig = {
 async function main() {
     // all p5 elements are documented in a single json object, here: https://p5js.org/reference/data.json
     // classitems lists all the methods
+    // uncomment the following block to update the p5API.json file
     // const response = await fetch('https://p5js.org/reference/data.json');
     // const p5api = await response.json();
     // for (let i in p5api.classitems) {
