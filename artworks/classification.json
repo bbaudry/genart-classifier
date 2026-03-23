@@ -1,0 +1,166 @@
+[
+    {
+        "name": "akuru.js",
+        "classification": {
+            "material_and_processes": [
+                "synthesized_image",
+                "randomness"
+            ],
+            "interaction": [
+                "no"
+            ],
+            "outcome": [
+                "visual",
+                "time_based"
+            ]
+        }
+    },
+    {
+        "name": "black&white_rotate.js",
+        "classification": {
+            "material_and_processes": [
+                "synthesized_image",
+                "randomness"
+            ],
+            "interaction": [
+                "no"
+            ],
+            "outcome": [
+                "visual",
+                "time_based"
+            ]
+        }
+    },
+    {
+        "name": "flowFieldNoiseAudio.js",
+        "classification": {
+            "material_and_processes": [
+                "processed_audio",
+                "synthesized_image",
+                "randomness"
+            ],
+            "interaction": [
+                "yes"
+            ],
+            "outcome": [
+                "visual",
+                "auditory",
+                "time_based"
+            ]
+        }
+    },
+    {
+        "name": "gaspe004.js",
+        "classification": {
+            "material_and_processes": [
+                "synthesized_image",
+                "processed_text",
+                "randomness"
+            ],
+            "interaction": [
+                "no"
+            ],
+            "outcome": [
+                "visual",
+                "static"
+            ]
+        }
+    },
+    {
+        "name": "kurutu.js",
+        "classification": {
+            "material_and_processes": [
+                "synthesized_image",
+                "randomness"
+            ],
+            "interaction": [
+                "no"
+            ],
+            "outcome": [
+                "visual",
+                "time_based"
+            ]
+        }
+    },
+    {
+        "name": "papissa.js",
+        "classification": {
+            "material_and_processes": [
+                "synthesized_image",
+                "randomness"
+            ],
+            "interaction": [
+                "no"
+            ],
+            "outcome": [
+                "visual",
+                "static"
+            ]
+        }
+    },
+    {
+        "name": "para.js",
+        "classification": {
+            "material_and_processes": [
+                "synthesized_image",
+                "randomness"
+            ],
+            "interaction": [
+                "no"
+            ],
+            "outcome": [
+                "visual",
+                "time_based"
+            ]
+        }
+    },
+    {
+        "name": "plein014-core.js",
+        "classification": {
+            "material_and_processes": [
+                "synthesized_image",
+                "randomness"
+            ],
+            "interaction": [
+                "no"
+            ],
+            "outcome": [
+                "visual",
+                "static"
+            ]
+        }
+    },
+    {
+        "name": "vertical_BW_stripes.js",
+        "classification": {
+            "material_and_processes": [
+                "synthesized_image"
+            ],
+            "interaction": [
+                "yes"
+            ],
+            "outcome": [
+                "visual",
+                "time_based"
+            ]
+        }
+    },
+    {
+        "name": "viduru.js",
+        "classification": {
+            "material_and_processes": [
+                "synthesized_image",
+                "synthesized_sound",
+                "randomness"
+            ],
+            "interaction": [
+                "yes"
+            ],
+            "outcome": [
+                "visual",
+                "auditory",
+                "time_based"
+            ]
+        }
+    }
+]
