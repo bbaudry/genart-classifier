@@ -10,12 +10,14 @@ import * as fs from 'node:fs';
 import * as druid from "@saehrimnir/druidjs";
 import { fileURLToPath } from 'url';
 import { realpathSync } from 'fs';
+import path from 'path';
+
 
 const modulePath = fileURLToPath(import.meta.url);
 const mainPath = process.argv[1];
-const artfolder = "./artworks/"
+const artfolder = "../art-in-swh/examples/74_examples/"
 const p5API = JSON.parse(fs.readFileSync('./p5API.json'));
-const artwork_classification = JSON.parse(fs.readFileSync('./artworks_manual_classification.json'));
+const artwork_classification = JSON.parse(fs.readFileSync('../art-in-swh/examples/manual-artworks-74.json'));
 if (realpathSync(modulePath) === realpathSync(mainPath)) {
     console.log('This module is being run as the main script.');
     // Run main functionality here
@@ -49,7 +51,6 @@ async function main() {
     for (let x in p5API) {
         p5map.set(p5API[x][0], p5API[x][1])
     }
-    console.log(p5map)
     let p5InAllartworks = [] // will contain one json object per artwork
     fs.readdir(artfolder, (err, files) => {
         files.forEach(file => {
@@ -58,7 +59,7 @@ async function main() {
         });
         fs.writeFileSync("p5InArtworks.json", JSON.stringify(p5InAllartworks), function (err) {
             if (err) throw err;
-            console.log('complete');
+                console.log('complete');
         }
         );
     });
@@ -99,10 +100,12 @@ async function main() {
 }
 
 function getClassification(artwork) {
+                const nameWithoutExt = path.parse(artwork).name;
+
     let classification = []
     for (let c in artwork_classification) {
-        if (artwork_classification[c].name == artwork) {
-            console.log(artwork + " has an classification")
+        if (artwork_classification[c].title == nameWithoutExt) {
+            console.log(nameWithoutExt + " has a classification")
             for (let mat in artwork_classification[c].classification.material_and_processes) {
                 classification.push(artwork_classification[c].classification.material_and_processes[mat])
             }
@@ -111,6 +114,7 @@ function getClassification(artwork) {
                 classification.push(artwork_classification[c].classification.outcome[sense])
 
             }
+            break
         }
     }
     classification.sort()
@@ -190,10 +194,10 @@ function getembedding(data, labels, classifications) {
     });
 
     const embedding = tsne.transform(500); // 500 iterations
-    console.log(embedding)
-    console.log(labels)
+    // console.log(embedding)
+    // console.log(labels)
     const JSONembed = { "embedding": embedding, "labels": labels, "classifications": classifications }
-    fs.writeFileSync("artworksEmbedding.json", JSON.stringify(JSONembed), function (err) {
+    fs.writeFileSync("artworksEmbedding74.json", JSON.stringify(JSONembed), function (err) {
         if (err) throw err;
         console.log('complete');
     })

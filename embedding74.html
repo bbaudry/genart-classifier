@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.5.0/p5.js"></script>
+    <script src="https://cdn.plot.ly/plotly-3.4.0.min.js" charset="utf-8"></script>
+
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            background-color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="plot" style="width:900px;height:900px;"></div>
+    <script>
+        let plotdiv = document.getElementById('plot');
+        let embedx = []
+        let embedy = []
+        fetchJSONData()
+
+        function fetchJSONData() {
+            fetch('./artworksEmbedding74.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log(data.embedding);
+                    //plot(data)
+                    buildTraces(data)
+                })
+                .catch(error => console.error('Failed to fetch data:', error));
+        }
+
+        function plot(JSONembedding) {
+            let embedding = JSONembedding.embedding
+            for (i in embedding) {
+                console.log("x: " + embedding[i][0] + "; y: " + embedding[i][1])
+                embedx.push(embedding[i][0])
+                embedy.push(embedding[i][1])
+            }
+            let labels = JSONembedding.labels
+            var trace1 = {
+                x: embedx,
+                y: embedy,
+                mode: 'markers',
+                type: 'scatter',
+                name: 'Art',
+                text: labels,
+                marker: { size: 12 }
+            };
+            Plotly.newPlot(plotdiv, [trace1]);
+        }
+
+        function buildTraces(embedding) {
+            class_indices = new Map()
+            for (let i in embedding.classifications) {
+                let classification = embedding.classifications[i]
+                let c = ""
+                for (let t in classification) {
+                    c += classification[t] + " "
+                }
+                if (class_indices.has(c)) {
+                    class_indices.get(c).push(i)
+                }
+                else {
+                    class_indices.set(c, [i])
+                }
+            }
+            let traces = []
+            for (const [classification, indices] of class_indices.entries()) {
+                let trace, embedx, embedy, labels
+                embedx = []
+                embedy = []
+                labels = []
+                for (let i in indices) {
+                    embedx.push(embedding.embedding[indices[i]][0])
+                    embedy.push(embedding.embedding[indices[i]][1])
+                    labels.push(embedding.labels[i] + "_" + classification)
+                }
+                trace = {
+                    x: embedx,
+                    y: embedy,
+                    mode: 'markers',
+                    type: 'scatter',
+                    //name: classification,
+                    text: labels,
+                    marker: { size: 12 }
+                }
+                traces.push(trace)
+            }
+            var layout = {
+                autosize: false,
+                width: 800,
+                height: 500,
+                paper_bgcolor: '#7f7f7f',
+                plot_bgcolor: '#c7c7c7'
+            };
+            console.log(traces)
+            Plotly.newPlot(plotdiv,  traces);
+        }
+
+    </script>
+</body>
+
+</html>
