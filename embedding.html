@@ -34,7 +34,8 @@
                 })
                 .then(data => {
                     console.log(data.embedding);
-                    plot(data)
+                    //plot(data)
+                    buildTraces(data)
                 })
                 .catch(error => console.error('Failed to fetch data:', error));
         }
@@ -59,6 +60,53 @@
             Plotly.newPlot(plotdiv, [trace1]);
         }
 
+        function buildTraces(embedding) {
+            class_indices = new Map()
+            for (let i in embedding.classifications) {
+                let classification = embedding.classifications[i]
+                let c = ""
+                for (let t in classification) {
+                    c += classification[t] + " "
+                }
+                if (class_indices.has(c)) {
+                    class_indices.get(c).push(i)
+                }
+                else {
+                    class_indices.set(c, [i])
+                }
+            }
+            let traces = []
+            for (const [classification, indices] of class_indices.entries()) {
+                let trace, embedx, embedy, labels
+                embedx = []
+                embedy = []
+                labels = []
+                for (let i in indices) {
+                    embedx.push(embedding.embedding[indices[i]][0])
+                    embedy.push(embedding.embedding[indices[i]][1])
+                    labels.push(embedding.labels[i] + "_" + classification)
+                }
+                trace = {
+                    x: embedx,
+                    y: embedy,
+                    mode: 'markers',
+                    type: 'scatter',
+                    //name: classification,
+                    text: labels,
+                    marker: { size: 12 }
+                }
+                traces.push(trace)
+            }
+            var layout = {
+                autosize: false,
+                width: 800,
+                height: 500,
+                paper_bgcolor: '#7f7f7f',
+                plot_bgcolor: '#c7c7c7'
+            };
+            console.log(traces)
+            Plotly.newPlot(plotdiv,  traces);
+        }
 
     </script>
 </body>
