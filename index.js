@@ -99,8 +99,10 @@ async function main() {
     });
 }
 
+/* This function is used when the artworks are already annotated with a classification
+*/
 function getClassification(artwork) {
-                const nameWithoutExt = path.parse(artwork).name;
+    const nameWithoutExt = path.parse(artwork).name;
 
     let classification = []
     for (let c in artwork_classification) {

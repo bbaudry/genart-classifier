@@ -13,24 +13,30 @@ import { realpathSync } from 'fs';
 
 const modulePath = fileURLToPath(import.meta.url);
 const mainPath = process.argv[1];
-const artfolder = "./lotsofartworks/0cheesecoder0/"
+const artfolder = "./artinfolders/"
 
 if (realpathSync(modulePath) === realpathSync(mainPath)) {
-    console.log('This module is being run as the main script.');
     // Run main functionality here
     main();
 }
 
 //const p5functions = new Map()
 async function main() {
-    getFileInFolder(artfolder)
+//    getFileInFolder(artfolder,0)
+    fs.readdir(artfolder, (err, files) => {
+        files.forEach(file => {
+            getFileInFolder(artfolder+file+'/',0)
+        });
+    })
+
 }
 
-function getFileInFolder(folder) {
+function getFileInFolder(folder,dep) {
     let path = folder
+    console.log("analyzing "+folder+" at depth "+dep)
     fs.readdir(folder, (err, files) => {
-    console.log(folder)
         files.forEach(file => {
+                    console.log(file)
             fs.stat(folder + file, (err, stat) => {
                 if (err) {
                     console.error('Error reading path:', err);
@@ -38,7 +44,9 @@ function getFileInFolder(folder) {
                 }
                 if(stat.isDirectory()){
                     path=path+file+'/'
-                    getFileInFolder(path)
+                    let d=dep+1
+                    console.log("go further")
+                    getFileInFolder(path,d)
                 }
                 else{
                     console.log(path+file)
