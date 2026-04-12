@@ -13,7 +13,8 @@ import { realpathSync } from 'fs';
 
 const modulePath = fileURLToPath(import.meta.url);
 const mainPath = process.argv[1];
-const artfolder = "./artinfolders/"
+const artfolder = "./lotsofartworks/"
+const pathsToArtFiles=[]
 
 if (realpathSync(modulePath) === realpathSync(mainPath)) {
     // Run main functionality here
@@ -22,37 +23,25 @@ if (realpathSync(modulePath) === realpathSync(mainPath)) {
 
 //const p5functions = new Map()
 async function main() {
-//    getFileInFolder(artfolder,0)
-    fs.readdir(artfolder, (err, files) => {
-        files.forEach(file => {
-            getFileInFolder(artfolder+file+'/',0)
-        });
-    })
+    getArtFilesInFolder(artfolder)
+        console.log(pathsToArtFiles.length)
 
+    for(let art in pathsToArtFiles){
+        //console.log(pathsToArtFiles[art])
+    }
 }
 
-function getFileInFolder(folder,dep) {
-    let path = folder
-    console.log("analyzing "+folder+" at depth "+dep)
-    fs.readdir(folder, (err, files) => {
-        files.forEach(file => {
-                    console.log(file)
-            fs.stat(folder + file, (err, stat) => {
-                if (err) {
-                    console.error('Error reading path:', err);
-                    return;
-                }
-                if(stat.isDirectory()){
-                    path=path+file+'/'
-                    let d=dep+1
-                    console.log("go further")
-                    getFileInFolder(path,d)
-                }
-                else{
-                    console.log(path+file)
-                }
-            })
-        });
-    })
 
+function getArtFilesInFolder(folder) {
+    let filenames = fs.readdirSync(folder);
+    filenames.forEach(file => {
+        let stat = fs.statSync(folder + file)
+        if (stat.isDirectory()) {
+            let path = folder + file + '/'
+            getArtFilesInFolder(path)
+        }
+        else {
+            pathsToArtFiles.push(folder + file)
+        }
+    })
 }
