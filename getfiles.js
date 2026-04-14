@@ -24,11 +24,7 @@ if (realpathSync(modulePath) === realpathSync(mainPath)) {
 //const p5functions = new Map()
 async function main() {
     getArtFilesInFolder(artfolder)
-        console.log(pathsToArtFiles.length)
-
-    for(let art in pathsToArtFiles){
-        //console.log(pathsToArtFiles[art])
-    }
+    console.log(pathsToArtFiles.length)
 }
 
 
