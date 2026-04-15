@@ -17,7 +17,7 @@ const modulePath = fileURLToPath(import.meta.url);
 const mainPath = process.argv[1];
 const artfolder = "../art-in-swh/examples/74_examples/"
 const p5API = JSON.parse(fs.readFileSync('./p5API.json'));
-const artwork_classification = JSON.parse(fs.readFileSync('../art-in-swh/examples/manual-artworks-74.json'));
+const artwork_classification = JSON.parse(fs.readFileSync('../art-in-swh/examples/74_examples_manual_classification.json'));
 const pathsToArtFiles = []
 
 if (realpathSync(modulePath) === realpathSync(mainPath)) {
@@ -57,13 +57,11 @@ async function main() {
     console.log(pathsToArtFiles.length)
 
     // contains one json object per artwork,  with the list of p5 functions invoked by the artwork
-    let p5InAllartworks = [] 
+    let p5InAllartworks = []
     for (let f in pathsToArtFiles) {
-        console.log("analyze " + pathsToArtFiles[f])
         let p5FunctionsInvokedInArtwork = getInvokedP5Functions(pathsToArtFiles[f], p5map)
         p5InAllartworks.push(p5FunctionsInvokedInArtwork)
     }
-
     fs.writeFileSync("p5InArtworks.json", JSON.stringify(p5InAllartworks), function (err) {
         if (err) throw err;
         console.log('complete');
@@ -71,11 +69,11 @@ async function main() {
 
 
 
-
     // contains one json object per artwork, each object stores the name of the artwork
     // as well as the complete list of functions in the p5 API, and the number of times the artwork invokes them (0 or more)
     let p5VectorsForAllArtworks = []
     for (let f in pathsToArtFiles) {
+        console.log("analyze "+pathsToArtFiles[f])
         let p5VectorArtwork = getP5FunctionsVector(pathsToArtFiles[f], p5map)
         p5VectorsForAllArtworks.push(p5VectorArtwork)
     }
@@ -151,38 +149,60 @@ function getClassification(artwork) {
 // - "p5functions" : an array with the list of p5 functions invoked by the artwork 
 // (no duplicate, if a p5 function is invoked multiple times, it appears only once in the array)
 function getInvokedP5Functions(filename, p5functions) {
-    // const code = fs.readFileSync(artfolder + filename).toString();
     let acornconfig = {
         ecmaVersion: 9,
         sourceType: "script",
         allowReturnOutsideFunction: true
     }
-
-    const code = fs.readFileSync(filename).toString();
-    const ast = acorn.parse(code, acornconfig).body;
     let p5FunctionsInFile = [];
-    let functionname, p5function
-    recast.visit(
-        ast,
-        {
-            visitCallExpression: (path) => {
-                functionname = path.node.callee.name
-                p5function = p5functions.has(functionname)
-                if (functionname && p5function && !p5FunctionsInFile.includes(functionname)) {
-                    p5FunctionsInFile.push(functionname)
-                    // {
-                    //     name: functionname,
-                    //     id: index
-                    // }
+    if (getFileExtension(filename) == ".js") { // this condition will skip cases where the art is in html
+        const code = fs.readFileSync(filename).toString();
+        const ast = acorn.parse(code, acornconfig).body;
+            let functionname, p5function
+            recast.visit(
+                ast,
+                {
+                    visitCallExpression: (path) => {
+                        functionname = path.node.callee.name
+                        p5function = p5functions.has(functionname)
+                        if (functionname && p5function && !p5FunctionsInFile.includes(functionname)) {
+                            p5FunctionsInFile.push(functionname)
+                            // {
+                            //     name: functionname,
+                            //     id: index
+                            // }
+                        }
+                        return false;
+                    }
                 }
-                return false;
-            }
+            )
         }
-    )
-    return { artwork: filename, p5functions: p5FunctionsInFile }
+        return { artwork: filename, p5functions: p5FunctionsInFile }
 }
 
+function safeParse(code) {
+    try {
+        const ast = parse(code, {
+            ecmaVersion: "latest",
+            sourceType: "module"
+        });
+        return { success: true, ast };
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            return {
+                success: false,
+                message: error.message,
+                location: {
+                    line: error.loc?.line,
+                    column: error.loc?.column
+                }
+            };
+        }
 
+        // rethrow unexpected errors
+        throw error;
+    }
+}
 
 // returns the list of p5 methods. If the method is invoked, the values is the number of invocations
 // filename must be the name of one javascript file (a script)
@@ -194,29 +214,32 @@ function getP5FunctionsVector(filename, p5functions) {
         allowReturnOutsideFunction: true
     }
 
-    const ast = acorn.parse(code, acornconfig).body;
-    let p5FunctionsInFile = [];
     let functionname, p5function, p5vector, val
     // initialize a map with all p5 methods as keys, and 0 as value
     p5vector = p5functions
     for (let v of p5vector.entries()) {
         p5vector.set(v[0], 0);
     }
-    recast.visit(
-        ast,
-        {
-            visitCallExpression: (path) => {
-                functionname = path.node.callee.name
-                p5function = p5vector.has(functionname)
-                // if a p5 method is found in the sketch, we increment its corresponding value in p5vector
-                if (functionname && p5function) {
-                    val = p5vector.get(functionname)
-                    p5vector.set(functionname, val + 1)
+    if (getFileExtension(filename) == ".js") {
+            const ast = acorn.parse(code, acornconfig).body;
+
+        console.log("all good with "+filename)
+        recast.visit(
+            ast,
+            {
+                visitCallExpression: (path) => {
+                    functionname = path.node.callee.name
+                    p5function = p5vector.has(functionname)
+                    // if a p5 method is found in the sketch, we increment its corresponding value in p5vector
+                    if (functionname && p5function) {
+                        val = p5vector.get(functionname)
+                        p5vector.set(functionname, val + 1)
+                    }
+                    return false;
                 }
-                return false;
             }
-        }
-    )
+        )
+    }
     return { artwork: filename, p5functions: Object.fromEntries(p5vector) }
 }
 
@@ -241,4 +264,13 @@ function getembedding(data, labels, classifications) {
         console.log('complete');
     })
 
+}
+
+/* input: name of a file
+   output: string that corresponds to the extension of the input file 
+*/
+
+function getFileExtension(filename) {
+    var i = filename.lastIndexOf('.');
+    return (i < 0) ? '' : filename.substr(i);
 }
