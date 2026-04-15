@@ -41,10 +41,10 @@ async function main() {
     let allpaths = getArtFilesInFolder(artfolder)
 
     // store the p5 usage in artwork source code files
-    getP5Usage(p5map, allpaths, "p5InArtworks2.json")
+    getP5Usage(p5map, allpaths, "p5InArtworks74.json")
 
     // get and store the p5 usage in artwork source code files
-    let p5VectorsForAllArtworks=getP5Vectors(p5map, allpaths, "p5VectorsArtworks2.json")
+    let p5VectorsForAllArtworks=getP5Vectors(p5map, allpaths, "p5VectorsArtworks.json")
 
     // compute a 2D projection of all vectors
     getembedding(p5VectorsForAllArtworks,"artworksEmbedding742.json")
