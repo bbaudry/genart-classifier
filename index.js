@@ -25,87 +25,106 @@ if (realpathSync(modulePath) === realpathSync(mainPath)) {
     // Run main functionality here
     main();
 }
-let acornconfig = {
-    ecmaVersion: 9,
-    sourceType: "script",
-    allowReturnOutsideFunction: true
-}
 
 
-//const p5functions = new Map()
 async function main() {
-    // all p5 elements are documented in a single json object, here: https://p5js.org/reference/data.json
-    // classitems lists all the methods
-    // uncomment the following block to update the p5API.json file
-    // const response = await fetch('https://p5js.org/reference/data.json');
-    // const p5api = await response.json();
-    // for (let i in p5api.classitems) {
-    //     if (p5api.classitems[i].itemtype == "method") {
-    //         p5functions.set(p5api.classitems[i].name, i)
-    //         p5functionsnames.push(p5api.classitems[i].name)
-    //     }
-    // }
-    // fs.writeFileSync("p5API.json", JSON.stringify(Array.from(p5functions.entries())), function (err) {
-    //     if (err) throw err;
-    //     console.log('complete');
-    // });
+    // fetching and storing p5 functions needs to be done only once; that's why it's commented
+    // await storeP5API()
+
+    // load the p5 function names in the p5map dictionnary
     let p5map = new Map()
     for (let x in p5API) {
         p5map.set(p5API[x][0], p5API[x][1])
     }
-    getArtFilesInFolder(artfolder)
-    console.log(pathsToArtFiles.length)
 
+    // get the paths to all artwork source code files
+    let allpaths = getArtFilesInFolder(artfolder)
+
+    // store the p5 usage in artwork source code files
+    getP5Usage(p5map, allpaths, "p5InArtworks2.json")
+
+    // get and store the p5 usage in artwork source code files
+    let p5VectorsForAllArtworks=getP5Vectors(p5map, allpaths, "p5VectorsArtworks2.json")
+
+    // compute a 2D projection of all vectors
+    getembedding(p5VectorsForAllArtworks,"artworksEmbedding742.json")
+
+}
+
+/** 
+ * This function statically analyses all art files and stores the p5 API usage in a local file
+ * @param {Map} p5map. Map that stores the names of all p5 functions 
+ * @param {Array} allpaths. An array of paths to artwork source code files 
+ * @param {String} p5inart. The name of the file to store the p5 usage of the artworks
+ * @returns {Array}. An array of vectors of p5 usage
+ */
+function getP5Usage(p5map, allpaths, p5inart) {
     // contains one json object per artwork,  with the list of p5 functions invoked by the artwork
     let p5InAllartworks = []
-    for (let f in pathsToArtFiles) {
-        let p5FunctionsInvokedInArtwork = getInvokedP5Functions(pathsToArtFiles[f], p5map)
+    for (let f in allpaths) {
+        let p5FunctionsInvokedInArtwork = getInvokedP5Functions(allpaths[f], p5map)
         p5InAllartworks.push(p5FunctionsInvokedInArtwork)
     }
-    fs.writeFileSync("p5InArtworks.json", JSON.stringify(p5InAllartworks), function (err) {
+    fs.writeFileSync(p5inart, JSON.stringify(p5InAllartworks), function (err) {
         if (err) throw err;
         console.log('complete');
     })
+}
 
-
-
+/**
+ * This function creates one vector per artwork, all of the same size, and stores them on disk in p5vectors
+ * @param {Map} p5map. Map that stores the names of all p5 functions 
+ * @param {Array} allpaths. An array of paths to artwork source code files 
+ * @param {String} p5vectors. The name of the file to store the p5 usage of the artworks 
+ */
+function getP5Vectors(p5map, allpaths, p5vectors) {
     // contains one json object per artwork, each object stores the name of the artwork
     // as well as the complete list of functions in the p5 API, and the number of times the artwork invokes them (0 or more)
     let p5VectorsForAllArtworks = []
-    for (let f in pathsToArtFiles) {
-        console.log("analyze "+pathsToArtFiles[f])
-        let p5VectorArtwork = getP5FunctionsVector(pathsToArtFiles[f], p5map)
+    for (let f in allpaths) {
+        let p5VectorArtwork = getP5FunctionsVector(allpaths[f], p5map)
         p5VectorsForAllArtworks.push(p5VectorArtwork)
     }
-    fs.writeFileSync("p5VectorsArtworks.json", JSON.stringify(p5VectorsForAllArtworks), function (err) {
+    fs.writeFileSync(p5vectors, JSON.stringify(p5VectorsForAllArtworks), function (err) {
         if (err) throw err;
         console.log('complete');
     }
     );
-    // here we extract one numerical vector per artwork from p5VectorsForAllArtworks
-    // each vector has the same size (the number of p5 functions), and the numerical values correspond to the number of invocations
-    // we also build the labels array with the names of the artworks
-    let vectorsOfP5 = []
-    let labels = []
-    let classifications = []
-    for (let art in p5VectorsForAllArtworks) {
-        let onevector = []
-        let currentartwork = p5VectorsForAllArtworks[art]
-        for (let f in currentartwork.p5functions) {
-            onevector.push(currentartwork.p5functions[f])
+    return p5VectorsForAllArtworks
+}
+
+/** This function fetches the names of all p5 methods and stores them in a local file for further usage
+ *  The names of the functions are fetched from an online endpoint provided by p5
+ *  The names are stored in a local file called p5API.json
+ */
+async function storeP5API() {
+    /*  all p5 elements are documented in a single json object, here: https://p5js.org/reference/data.json
+        classitems lists all the methods
+    */
+    const p5functions = new Map()
+    const response = await fetch('https://p5js.org/reference/data.json');
+    const p5api = await response.json();
+    for (let i in p5api.classitems) {
+        if (p5api.classitems[i].itemtype == "method") {
+            p5functions.set(p5api.classitems[i].name, i)
+            p5functionsnames.push(p5api.classitems[i].name)
         }
-        vectorsOfP5.push(onevector)
-        labels.push(currentartwork.artwork)
-        classifications.push(getClassification(currentartwork.artwork))
     }
-    // compute t-SNE in 2D with the vectors, label each point in the 2D space with the corresponding artwork name
-    // the coordinates of the points, and their labels, are stored on disk
-    getembedding(vectorsOfP5, labels, classifications)
+    fs.writeFileSync("p5API.json", JSON.stringify(Array.from(p5functions.entries())), function (err) {
+        if (err) throw err;
+        console.log('complete');
+    });
 
 }
 
+/**
+ * This function explores folder recursively. If it finds a file, it stores its complete path
+ * @param {String} folder. The folder inside which are stored art source code files
+ * @returns {Array} paths. An array that stores all the paths to each individual file found in folder 
+ */
 function getArtFilesInFolder(folder) {
     let filenames = fs.readdirSync(folder);
+    let paths = []
     filenames.forEach(file => {
         let stat = fs.statSync(folder + file)
         if (stat.isDirectory()) {
@@ -114,8 +133,10 @@ function getArtFilesInFolder(folder) {
         }
         else {
             pathsToArtFiles.push(folder + file)
+            paths.push(folder + file)
         }
     })
+    return paths
 }
 
 
@@ -158,26 +179,26 @@ function getInvokedP5Functions(filename, p5functions) {
     if (getFileExtension(filename) == ".js") { // this condition will skip cases where the art is in html
         const code = fs.readFileSync(filename).toString();
         const ast = acorn.parse(code, acornconfig).body;
-            let functionname, p5function
-            recast.visit(
-                ast,
-                {
-                    visitCallExpression: (path) => {
-                        functionname = path.node.callee.name
-                        p5function = p5functions.has(functionname)
-                        if (functionname && p5function && !p5FunctionsInFile.includes(functionname)) {
-                            p5FunctionsInFile.push(functionname)
-                            // {
-                            //     name: functionname,
-                            //     id: index
-                            // }
-                        }
-                        return false;
+        let functionname, p5function
+        recast.visit(
+            ast,
+            {
+                visitCallExpression: (path) => {
+                    functionname = path.node.callee.name
+                    p5function = p5functions.has(functionname)
+                    if (functionname && p5function && !p5FunctionsInFile.includes(functionname)) {
+                        p5FunctionsInFile.push(functionname)
+                        // {
+                        //     name: functionname,
+                        //     id: index
+                        // }
                     }
+                    return false;
                 }
-            )
-        }
-        return { artwork: filename, p5functions: p5FunctionsInFile }
+            }
+        )
+    }
+    return { artwork: filename, p5functions: p5FunctionsInFile }
 }
 
 function safeParse(code) {
@@ -204,8 +225,12 @@ function safeParse(code) {
     }
 }
 
-// returns the list of p5 methods. If the method is invoked, the values is the number of invocations
+// returns one json object for the filename
 // filename must be the name of one javascript file (a script)
+// the json object includes 
+// - "artwork" : the name of the artwork
+// - "p5functions" : a key,value dictionnary;
+// the key is one p5 method; the value is the number of times the p5 method is invoked in filename
 function getP5FunctionsVector(filename, p5functions) {
     const code = fs.readFileSync(filename).toString();
     let acornconfig = {
@@ -221,9 +246,7 @@ function getP5FunctionsVector(filename, p5functions) {
         p5vector.set(v[0], 0);
     }
     if (getFileExtension(filename) == ".js") {
-            const ast = acorn.parse(code, acornconfig).body;
-
-        console.log("all good with "+filename)
+        const ast = acorn.parse(code, acornconfig).body;
         recast.visit(
             ast,
             {
@@ -243,33 +266,47 @@ function getP5FunctionsVector(filename, p5functions) {
     return { artwork: filename, p5functions: Object.fromEntries(p5vector) }
 }
 
-// data: array of numerical vectors, all the same size
-// labels: array of names, one per vector
-// classification: array of classifications, one per vector; each classification is an array in alphabetical order 
-// result: the 2D embedding for the vectors, stored with labels in a json file 
-function getembedding(data, labels, classifications) {
+/**
+ * This function computes a t-SNE embedding of he vectors and stores the coordinates in embeddingFile
+ * @param {Array} artworksVectors. An array of vectors. Their length is the number of p5 functions. One vector per artwork. 
+ * @param {String} embeddingFile. The name of the file where the 2D coordinates and labels are stored 
+ */
+function getembedding(artworksVectors,embeddingFile) {
+    let data = []
+    let labels = []
+    let classifications = []
+    for (let art in artworksVectors) {
+        let onevector = []
+        let currentartwork = artworksVectors[art]
+        for (let f in currentartwork.p5functions) {
+            onevector.push(currentartwork.p5functions[f])
+        }
+        data.push(onevector)
+        labels.push(currentartwork.artwork)
+        classifications.push(getClassification(currentartwork.artwork))
+    }
+
+    // compute t-SNE in 2D with the vectors, label each point in the 2D space with the corresponding artwork name
+    // the coordinates of the points, and their labels, are stored on disk
     const tsne = new druid.TSNE(data, {
         perplexity: 30,
         epsilon: 10,
         d: 2,
         seed: 42
     });
-
     const embedding = tsne.transform(500); // 500 iterations
     // console.log(embedding)
     // console.log(labels)
     const JSONembed = { "embedding": embedding, "labels": labels, "classifications": classifications }
-    fs.writeFileSync("artworksEmbedding74.json", JSON.stringify(JSONembed), function (err) {
+    fs.writeFileSync(embeddingFile, JSON.stringify(JSONembed), function (err) {
         if (err) throw err;
         console.log('complete');
     })
-
 }
 
 /* input: name of a file
-   output: string that corresponds to the extension of the input file 
+   output: string that corresponds to the extension of the input file, e.g. ".js"
 */
-
 function getFileExtension(filename) {
     var i = filename.lastIndexOf('.');
     return (i < 0) ? '' : filename.substr(i);
