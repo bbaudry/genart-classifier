@@ -15,7 +15,8 @@ import path from 'path';
 
 const modulePath = fileURLToPath(import.meta.url);
 const mainPath = process.argv[1];
-const artfolder = "../art-in-swh/examples/74_examples/"
+//const artfolder = "../art-in-swh/examples/74_examples/"
+const artfolder = "./lotsofartworks/"
 const p5API = JSON.parse(fs.readFileSync('./p5API.json'));
 const artwork_classification = JSON.parse(fs.readFileSync('../art-in-swh/examples/74_examples_manual_classification.json'));
 const pathsToArtFiles = []
@@ -28,26 +29,33 @@ if (realpathSync(modulePath) === realpathSync(mainPath)) {
 
 
 async function main() {
-    // fetching and storing p5 functions needs to be done only once; that's why it's commented
+    /**
+     * fetching and storing p5 functions needs to be done only once; that's why it's commented */ 
     // await storeP5API()
 
-    // load the p5 function names in the p5map dictionnary
+    /**
+     * load the p5 function names in the p5map dictionnary */ 
     let p5map = new Map()
     for (let x in p5API) {
         p5map.set(p5API[x][0], p5API[x][1])
     }
 
-    // get the paths to all artwork source code files
+    /**
+     * get the paths to all artwork source code files */ 
     let allpaths = getArtFilesInFolder(artfolder)
+    console.log(pathsToArtFiles.length)
 
-    // store the p5 usage in artwork source code files
-    getP5Usage(p5map, allpaths, "p5InArtworks74.json")
+    /**
+     * store the p5 usage in artwork source code files */ 
+    getP5Usage(p5map, pathsToArtFiles, "p5InArtworksLOTS.json")
 
-    // get and store the p5 usage in artwork source code files
-    let p5VectorsForAllArtworks=getP5Vectors(p5map, allpaths, "p5VectorsArtworks.json")
+    /**
+     * get and store the p5 usage in artwork source code files */ 
+    //let p5VectorsForAllArtworks=getP5Vectors(p5map, allpaths, "p5VectorsArtworks.json")
 
-    // compute a 2D projection of all vectors
-    getembedding(p5VectorsForAllArtworks,"artworksEmbedding742.json")
+    /**
+     * compute a 2D projection of all vectors */ 
+    //getembedding(p5VectorsForAllArtworks,"artworksEmbedding74.json")
 
 }
 
@@ -62,6 +70,7 @@ function getP5Usage(p5map, allpaths, p5inart) {
     // contains one json object per artwork,  with the list of p5 functions invoked by the artwork
     let p5InAllartworks = []
     for (let f in allpaths) {
+        console.log("analyzing "+allpaths[f]+"  "+p5InAllartworks.length)
         let p5FunctionsInvokedInArtwork = getInvokedP5Functions(allpaths[f], p5map)
         p5InAllartworks.push(p5FunctionsInvokedInArtwork)
     }
@@ -178,6 +187,7 @@ function getInvokedP5Functions(filename, p5functions) {
     let p5FunctionsInFile = [];
     if (getFileExtension(filename) == ".js") { // this condition will skip cases where the art is in html
         const code = fs.readFileSync(filename).toString();
+        try{
         const ast = acorn.parse(code, acornconfig).body;
         let functionname, p5function
         recast.visit(
@@ -196,9 +206,26 @@ function getInvokedP5Functions(filename, p5functions) {
                     return false;
                 }
             }
-        )
+        )}
+        catch(error){
+                    if (error instanceof SyntaxError) {
+            return {
+                success: false,
+                message: error.message,
+                location: {
+                    line: error.loc?.line,
+                    column: error.loc?.column
+                }
+            };
+        }
+
+        // rethrow unexpected errors
+        throw error;
+
+        }
     }
     return { artwork: filename, p5functions: p5FunctionsInFile }
+    
 }
 
 function safeParse(code) {
