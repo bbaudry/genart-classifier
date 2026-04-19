@@ -50,6 +50,14 @@ async function main() {
     getP5Usage(p5map, pathsToArtFiles, "p5InArtworks74-classes.json")
 
     /**
+     * get and store  p5 usage in artwork source code files in vectors of size = nb p5 functions */
+    let p5FunctionsVectorsForAllArtworks=getP5FunctionsVectors(p5map, allpaths, "p5VectorsArtworks.json")
+
+    /**
+     * compute a 2D projection of all vectors */
+    getembedding(p5FunctionsVectorsForAllArtworks,"artworksEmbedding74.json")
+
+    /**
      * load the p5 function names and their corresponding module in the p5Modulesmap dictionnary */
     let p5FunctionsModulesmap = new Map()
     for (let x in p5APIModules) {
@@ -63,16 +71,11 @@ async function main() {
 
     /**
      * get and store  p5 usage in artwork source code files in vectors of size = nb p5 functions */
-    let p5FunctionsVectorsForAllArtworks=getP5FunctionsVectors(p5map, allpaths, "p5VectorsArtworks.json")
-
-    /**
-     * get and store  p5 usage in artwork source code files in vectors of size = nb p5 functions */
     let p5ModulesVectorsForAllArtworks=getP5ModulesVectors(p5FunctionsModulesmap, p5ModulesArray, allpaths, "p5ModulesVectors74Artworks.json")
-    
+
     /**
      * compute a 2D projection of all vectors */
-    getembedding(p5FunctionsVectorsForAllArtworks,"artworksEmbedding74.json")
-
+    getembedding(p5ModulesVectorsForAllArtworks,"artworksModulesEmbedding74.json")
 }
 
 /** 
@@ -112,8 +115,6 @@ function getP5UsageAndModules(p5Modulesmap, allpaths, p5AndModulesinart) {
         console.log('complete');
     })
 }
-
-
 
 /**
  * This function creates one vector per artwork, all of the same size, and stores them on disk in p5vectors
@@ -209,8 +210,10 @@ function getArtFilesInFolder(folder) {
     return paths
 }
 
-
-/* This function is used when the artworks are already annotated with a classification
+/** 
+* This function is used when the artworks are already annotated with a classification
+* @param {String} artwork. path to source code file for an artwork
+* @returns an array that includes the artwork's classification according to 'material and processes', 'interaction' and 'sensory outcome'
 */
 function getClassification(artwork) {
     const nameWithoutExt = path.parse(artwork).name;
@@ -448,7 +451,8 @@ function getP5ModulesVector(filename, p5functions, p5ModulesArray) {
 }
 
 /**
- * This function computes a t-SNE embedding of he vectors and stores the coordinates in embeddingFile
+ * This function computes a t-SNE embedding of the vectors and stores the coordinates in embeddingFile
+ * Thus function assumes that the artworks are manually annotated with a classification (cf. getClassification invocation)
  * @param {Array} artworksVectors. An array of vectors. Their length is the number of p5 functions. One vector per artwork. 
  * @param {String} embeddingFile. The name of the file where the 2D coordinates and labels are stored 
  */
