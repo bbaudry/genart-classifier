@@ -4,10 +4,10 @@
 - https://astexplorer.net/; to figure out the types of the AST nodes
 - https://saehm.github.io/DruidJS/api/classes/TSNE.html; for the T-SNE embedding
 */
-import * as acorn from "acorn"
-import * as recast from "recast";
-import * as fs from 'node:fs';
-import * as druid from "@saehrimnir/druidjs";
+import * as acorn from "acorn"; // to parse the artwork
+import * as recast from "recast"; // to visit the artwork AST
+import * as fs from 'node:fs'; // to read and write files and folders
+import * as druid from "@saehrimnir/druidjs"; // for t-SNE
 import { fileURLToPath } from 'url';
 import { realpathSync } from 'fs';
 import path from 'path';
@@ -51,21 +51,27 @@ async function main() {
 
     /**
      * load the p5 function names and their corresponding module in the p5Modulesmap dictionnary */
-    let p5Modulesmap = new Map()
+    let p5FunctionsModulesmap = new Map()
     for (let x in p5APIModules) {
-        p5Modulesmap.set(p5APIModules[x]["name"],p5APIModules[x]["module"])
+        p5FunctionsModulesmap.set(p5APIModules[x]["name"],p5APIModules[x]["module"])
     }
+    const p5ModulesArray = Array.from(new Set(p5FunctionsModulesmap.values()));
+    p5ModulesArray.sort()
     /**
      * store the p5 usage in artwork source code files and their correspinding module  */
-    getP5UsageAndModules(p5Modulesmap, pathsToArtFiles, "p5AndModulesInArtworks74.json")
+    getP5UsageAndModules(p5FunctionsModulesmap, pathsToArtFiles, "p5AndModulesInArtworks74.json")
 
     /**
-     * get and store the p5 usage in artwork source code files */
-    //let p5VectorsForAllArtworks=getP5Vectors(p5map, allpaths, "p5VectorsArtworks.json")
+     * get and store  p5 usage in artwork source code files in vectors of size = nb p5 functions */
+    let p5FunctionsVectorsForAllArtworks=getP5FunctionsVectors(p5map, allpaths, "p5VectorsArtworks.json")
 
+    /**
+     * get and store  p5 usage in artwork source code files in vectors of size = nb p5 functions */
+    let p5ModulesVectorsForAllArtworks=getP5ModulesVectors(p5FunctionsModulesmap, p5ModulesArray, allpaths, "p5ModulesVectors74Artworks.json")
+    
     /**
      * compute a 2D projection of all vectors */
-    //getembedding(p5VectorsForAllArtworks,"artworksEmbedding74.json")
+    getembedding(p5FunctionsVectorsForAllArtworks,"artworksEmbedding74.json")
 
 }
 
@@ -79,7 +85,6 @@ function getP5Usage(p5map, allpaths, p5inart) {
     // contains one json object per artwork,  with the list of p5 functions invoked by the artwork
     let p5InAllartworks = []
     for (let f in allpaths) {
-        console.log("analyzing " + allpaths[f] + "  " + p5InAllartworks.length)
         let p5FunctionsInvokedInArtwork = getInvokedP5Functions(allpaths[f], p5map)
         p5InAllartworks.push(p5FunctionsInvokedInArtwork)
     }
@@ -99,7 +104,6 @@ function getP5UsageAndModules(p5Modulesmap, allpaths, p5AndModulesinart) {
     // contains one json object per artwork,  with the list of p5 functions invoked by the artwork
     let p5InAllartworks = []
     for (let f in allpaths) {
-        console.log("analyzing " + allpaths[f] + "  " + p5InAllartworks.length)
         let p5FunctionsInvokedInArtwork = getInvokedP5FunctionsAndModules(allpaths[f], p5Modulesmap)
         p5InAllartworks.push(p5FunctionsInvokedInArtwork)
     }
@@ -118,7 +122,7 @@ function getP5UsageAndModules(p5Modulesmap, allpaths, p5AndModulesinart) {
  * @param {String} p5vectors. The name of the file to store the p5 usage of the artworks 
  * @returns {Array}. An array of vectors that capture the part of the p5 API used by each artwork in allpaths
  */
-function getP5Vectors(p5map, allpaths, p5vectors) {
+function getP5FunctionsVectors(p5map, allpaths, p5vectors) {
     // contains one json object per artwork, each object stores the name of the artwork
     // as well as the complete list of functions in the p5 API, and the number of times the artwork invokes them (0 or more)
     let p5VectorsForAllArtworks = []
@@ -133,6 +137,32 @@ function getP5Vectors(p5map, allpaths, p5vectors) {
     );
     return p5VectorsForAllArtworks
 }
+
+/**
+ * This function creates one vector per artwork, all of the same size, and stores them on disk in p5vectors
+ * @param {Map} p5FunctionsModulesmap. Map that stores the names of all p5 functions, and their corresponding module 
+ * @param {Array} p5ModulesArray. Array with all p5 modules names, in alphabetical order 
+ * @param {Array} allpaths. An array of paths to artwork source code files 
+ * @param {String} p5vectorsFile. The name of the file to store the p5 usage of the artworks 
+ * @returns {Array}. An array of vectors that capture the part of the p5 API used by each artwork in allpaths
+ */
+function getP5ModulesVectors(p5FunctionsModulesmap, p5ModulesArray, allpaths, p5vectorsFile) {
+    // contains one json object per artwork, each object stores the name of the artwork
+    // as well as the complete list of functions in the p5 API, and the number of times the artwork invokes them (0 or more)
+    let p5ModulesVectorsForAllArtworks = []
+    for (let f in allpaths) {
+        let p5VectorArtwork = getP5ModulesVector(allpaths[f], p5FunctionsModulesmap, p5ModulesArray)
+        p5ModulesVectorsForAllArtworks.push(p5VectorArtwork)
+    }
+    fs.writeFileSync(p5vectorsFile, JSON.stringify(p5ModulesVectorsForAllArtworks), function (err) {
+        if (err) throw err;
+        console.log('complete');
+    }
+    );
+    console.log(p5ModulesVectorsForAllArtworks)
+    return p5ModulesVectorsForAllArtworks
+}
+
 
 /** This function fetches the names of all p5 methods and stores them in a local file for further usage
  *  The names of the functions are fetched from an online endpoint provided by p5
@@ -336,8 +366,7 @@ function safeParse(code) {
 // filename must be the name of one javascript file (a script)
 // the json object includes 
 // - "artwork" : the name of the artwork
-// - "p5functions" : a key,value dictionnary;
-// the key is one p5 method; the value is the number of times the p5 method is invoked in filename
+// - "p5functions" : the key is one p5 method; the value is the number of times the p5 method is invoked in filename
 function getP5FunctionsVector(filename, p5functions) {
     const code = fs.readFileSync(filename).toString();
     let acornconfig = {
@@ -371,6 +400,51 @@ function getP5FunctionsVector(filename, p5functions) {
         )
     }
     return { artwork: filename, p5functions: Object.fromEntries(p5vector) }
+}
+
+/**
+ * 
+ * @param {String} filename. path to an artworks source code file 
+ * @param {Map} p5functions. map of p5 function names and corresponding module
+ * @param {Array} p5ModulesArray. array with names of p5 modules, in alphabetical order
+ * @returns a JSON object:
+ * - "functionname": path to an artworks source code file
+ * - "modulesvector": a key value object: key is the name of a module; value is 1 if artwork relates to that module
+ */
+function getP5ModulesVector(filename, p5functions, p5ModulesArray) {
+    const code = fs.readFileSync(filename).toString();
+    let acornconfig = {
+        ecmaVersion: 9,
+        sourceType: "script",
+        allowReturnOutsideFunction: true
+    }
+
+    let invokedfunctionname, isp5function, p5ModulesVector, modulename
+    p5ModulesVector = new Map()
+    for (let m in p5ModulesArray) {
+        p5ModulesVector.set(p5ModulesArray[m], 0);
+    }
+    if (getFileExtension(filename) == ".js") {
+        const ast = acorn.parse(code, acornconfig).body;
+        recast.visit(
+            ast,
+            {
+                visitCallExpression: (path) => {
+                    invokedfunctionname = path.node.callee.name
+                    isp5function = p5functions.has(invokedfunctionname)
+                    // if a p5 method is found in the sketch, we increment its corresponding value in p5vector
+                    if (isp5function) {
+                        modulename = p5functions.get(invokedfunctionname)
+                        if(p5ModulesVector.get(modulename)==0){
+                            p5ModulesVector.set(modulename,1)
+                        }
+                    }
+                    return false;
+                }
+            }
+        )
+    }
+    return { artwork: filename, p5functions: Object.fromEntries(p5ModulesVector) }
 }
 
 /**
