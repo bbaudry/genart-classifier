@@ -15,8 +15,8 @@ import path from 'path';
 
 const modulePath = fileURLToPath(import.meta.url);
 const mainPath = process.argv[1];
-const artfolder = "../art-in-swh/examples/74_examples/"
-//const artfolder = "./lotsofartworks/"
+//const artfolder = "../art-in-swh/examples/74_examples/"
+const artfolder = "./lotsofartworks/"
 const p5API = JSON.parse(fs.readFileSync('./p5API.json'));
 const p5APIModules = JSON.parse(fs.readFileSync('./p5API_classes.json'));
 const artwork_classification = JSON.parse(fs.readFileSync('../art-in-swh/examples/74_examples_manual_classification.json'));
@@ -47,15 +47,15 @@ async function main() {
     }
     /**
      * store the p5 usage in artwork source code files */
-    getP5Usage(p5map, pathsToArtFiles, "p5InArtworks74-classes.json")
+    // getP5Usage(p5map, pathsToArtFiles, "p5InArtworks74-classes.json")
 
     /**
      * get and store  p5 usage in artwork source code files in vectors of size = nb p5 functions */
-    let p5FunctionsVectorsForAllArtworks=getP5FunctionsVectors(p5map, allpaths, "p5VectorsArtworks.json")
+    // let p5FunctionsVectorsForAllArtworks=getP5FunctionsVectors(p5map, allpaths, "p5VectorsArtworks.json")
 
     /**
      * compute a 2D projection of all vectors */
-    getembedding(p5FunctionsVectorsForAllArtworks,"artworksEmbedding74.json")
+    // getembedding(p5FunctionsVectorsForAllArtworks,"artworksEmbedding74.json")
 
     /**
      * load the p5 function names and their corresponding module in the p5Modulesmap dictionnary */
@@ -65,17 +65,18 @@ async function main() {
     }
     const p5ModulesArray = Array.from(new Set(p5FunctionsModulesmap.values()));
     p5ModulesArray.sort()
+
     /**
      * store the p5 usage in artwork source code files and their correspinding module  */
-    getP5UsageAndModules(p5FunctionsModulesmap, pathsToArtFiles, "p5AndModulesInArtworks74.json")
+    getP5UsageAndModules(p5FunctionsModulesmap, pathsToArtFiles, "p5AndModulesInLotsOfArtworks.json")
 
     /**
      * get and store  p5 usage in artwork source code files in vectors of size = nb p5 functions */
-    let p5ModulesVectorsForAllArtworks=getP5ModulesVectors(p5FunctionsModulesmap, p5ModulesArray, allpaths, "p5ModulesVectors74Artworks.json")
+    // let p5ModulesVectorsForAllArtworks=getP5ModulesVectors(p5FunctionsModulesmap, p5ModulesArray, allpaths, "p5ModulesVectors74Artworks.json")
 
     /**
      * compute a 2D projection of all vectors */
-    getembedding(p5ModulesVectorsForAllArtworks,"artworksModulesEmbedding74.json")
+    // getembedding(p5ModulesVectorsForAllArtworks,"artworksModulesEmbedding74.json")
 }
 
 /** 
@@ -189,7 +190,7 @@ async function storeP5API() {
 }
 
 /**
- * This function explores folder recursively. If it finds a file, it stores its complete path
+ * This function explores a folder recursively. If it finds a file, it stores its complete path
  * @param {String} folder. The folder inside which are stored art source code files
  * @returns {Array} paths. An array that stores all the paths to each individual file found in folder 
  */
