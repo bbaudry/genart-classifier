@@ -33,7 +33,8 @@ def checkAuditory(p5Code,prediction):
     for oneprediction in prediction:
         if "auditory" in oneprediction["predicted_labels"]["outcome"]:
             if any(onep5["artwork"]==oneprediction["artwork"] for onep5 in p5Code):
-                print(f"it is possible to get the p5 classes for {oneprediction["artwork"]}")
+                p5CodeObject = [obj for obj in p5Code if obj.get('artwork') == oneprediction["artwork"]]
+                print(f"it is possible to get the p5 classes for {p5CodeObject["p5modules"]}")
 
     
 
