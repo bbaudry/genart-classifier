@@ -16,7 +16,7 @@ import path from 'path';
 const modulePath = fileURLToPath(import.meta.url);
 const mainPath = process.argv[1];
 //const artfolder = "../art-in-swh/examples/74_examples/"
-const artfolder = "./lotsofartworks/"
+const artfolder = "./artworks/"
 const p5API = JSON.parse(fs.readFileSync('./p5API.json'));
 const p5APIModules = JSON.parse(fs.readFileSync('./p5API_classes.json'));
 const artwork_classification = JSON.parse(fs.readFileSync('../art-in-swh/examples/74_examples_manual_classification.json'));
@@ -61,14 +61,14 @@ async function main() {
      * load the p5 function names and their corresponding module in the p5Modulesmap dictionnary */
     let p5FunctionsModulesmap = new Map()
     for (let x in p5APIModules) {
-        p5FunctionsModulesmap.set(p5APIModules[x]["name"],p5APIModules[x]["module"])
+        p5FunctionsModulesmap.set(p5APIModules[x]["name"], p5APIModules[x]["module"])
     }
     const p5ModulesArray = Array.from(new Set(p5FunctionsModulesmap.values()));
     p5ModulesArray.sort()
 
     /**
      * store the p5 usage in artwork source code files and their correspinding module  */
-    getP5UsageAndModules(p5FunctionsModulesmap, pathsToArtFiles, "p5AndModulesInLotsOfArtworks.json")
+    getP5UsageAndModules(p5FunctionsModulesmap, pathsToArtFiles, "p5AndModulesInArtworks.json")
 
     /**
      * get and store  p5 usage in artwork source code files in vectors of size = nb p5 functions */
@@ -317,10 +317,15 @@ function getInvokedP5FunctionsAndModules(filename, p5modules) {
                         isp5function = p5modules.has(functionname)
                         if (isp5function && !p5FunctionsInFile.includes(functionname)) {
                             p5FunctionsInFile.push(functionname)
-                            if (!p5ModulesInFile.includes(p5modules.get(functionname))){
+                            if (!p5ModulesInFile.includes(p5modules.get(functionname))) {
                                 p5ModulesInFile.push(p5modules.get(functionname))
                             }
                         }
+                        const argNames = path.node.arguments.map(arg => {
+                            if (arg.type === 'Identifier') console.log(arg.name);
+                            if (arg.type === 'Literal') console.log(arg.value);
+                        //    return arg.name || 'unknown';
+                        });
                         return false;
                     }
                 }
@@ -439,8 +444,8 @@ function getP5ModulesVector(filename, p5functions, p5ModulesArray) {
                     // if a p5 method is found in the sketch, we increment its corresponding value in p5vector
                     if (isp5function) {
                         modulename = p5functions.get(invokedfunctionname)
-                        if(p5ModulesVector.get(modulename)==0){
-                            p5ModulesVector.set(modulename,1)
+                        if (p5ModulesVector.get(modulename) == 0) {
+                            p5ModulesVector.set(modulename, 1)
                         }
                     }
                     return false;
