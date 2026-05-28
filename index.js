@@ -303,6 +303,7 @@ function getInvokedP5FunctionsAndModules(filename, p5modules) {
     }
     let p5FunctionsInFile = [];
     let p5ModulesInFile = [];
+    let p5ArgumentsInFile = [];
 
     if (getFileExtension(filename) == ".js") { // this condition will skip cases where the art is in html
         const code = fs.readFileSync(filename).toString();
@@ -316,16 +317,21 @@ function getInvokedP5FunctionsAndModules(filename, p5modules) {
                         functionname = path.node.callee.name
                         isp5function = p5modules.has(functionname)
                         if (isp5function && !p5FunctionsInFile.includes(functionname)) {
-                            p5FunctionsInFile.push(functionname)
+                            let args = [];
+                            const argNames = path.node.arguments.map(arg => {
+                                if (arg.type === 'Identifier') args.push(arg.name);
+                                if (arg.type === 'Literal') args.push(arg.value);
+                                //    return arg.name || 'unknown';
+                            });
+                            let func={
+                                name:functionname,
+                                args:args
+                            }
+                            p5FunctionsInFile.push(func)
                             if (!p5ModulesInFile.includes(p5modules.get(functionname))) {
                                 p5ModulesInFile.push(p5modules.get(functionname))
                             }
                         }
-                        const argNames = path.node.arguments.map(arg => {
-                            if (arg.type === 'Identifier') console.log(arg.name);
-                            if (arg.type === 'Literal') console.log(arg.value);
-                        //    return arg.name || 'unknown';
-                        });
                         return false;
                     }
                 }
